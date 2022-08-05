@@ -12,6 +12,7 @@ convars["sv_playermodel_selector_instantly"]	= 1
 convars["sv_playermodel_selector_flexes"]		= 0
 convars["sv_playermodel_selector_limit"]		= 1
 convars["sv_playermodel_selector_debug"]		= 0
+convars["sv_playermodel_blacklist"]				= ""
 for cvar, def in pairs( convars ) do
 	CreateConVar( cvar,	def, flag )
 end
@@ -589,6 +590,23 @@ function Menu.Setup()
 				
 				ModelIconLayout:Clear()
 				ModelList:Clear()
+
+				local BlacklistedModels = GetConVar("sv_playermodel_blacklist"):GetString()
+
+				local function IsBlacklisted( name )
+					if not BlacklistedModels or BlacklistedModels == "" then
+						return false
+					else
+						local tbl = string.Split( BlacklistedModels, ";" )
+						for _, substr in pairs( tbl ) do
+							if string.match( player_manager.TranslatePlayerModel( name ):lower(), string.PatternSafe( substr:lower() ) ) then
+								return true
+							end
+						end
+						return false
+					end
+
+				end
 				
 				local ModelFilter = Menu.ModelFilter:GetValue() or nil
 				
@@ -608,7 +626,7 @@ function Menu.Setup()
 				
 				for name, model in SortedPairs( AllModels ) do
 					
-					if IsInFilter( name ) then
+					if IsInFilter( name ) and not IsBlacklisted( name ) then
 					
 						local icon = ModelIconLayout:Add( "SpawnIcon" )
 						icon:SetSize( 64, 64 )
